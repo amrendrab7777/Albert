@@ -2,82 +2,83 @@ import streamlit as st
 import groq
 from duckduckgo_search import DDGS
 
-# --- 1. PROFESSIONAL PAGE CONFIG ---
+# --- 1. PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="Universal AI Agent",
-    page_icon="🌐",
-    layout="centered", # Best for mobile/tablet screens
+    page_title="Albert",
+    page_icon="🤖",
+    layout="centered", # Optimized for Mobile and Tablets
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for Mobile Optimization
+# Custom Styling for a Professional Feel
 st.markdown("""
     <style>
     .stApp { max-width: 850px; margin: 0 auto; }
     .stChatMessage { border-radius: 15px; padding: 15px; margin-bottom: 10px; font-size: 16px; }
-    /* Fix for mobile input bar */
     .stChatInput { bottom: 20px; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. SECURE API AUTHENTICATION ---
-# This pulls from your Streamlit "Secrets" vault (Step 3 in previous messages)
+# --- 2. SECURE API LOADING ---
+# Ensure you add GROQ_API_KEY to your Streamlit Cloud Secrets
 try:
     API_KEY = st.secrets["GROQ_API_KEY"]
     client = groq.Groq(api_key=API_KEY)
 except Exception:
-    st.error("⚠️ Setup Error: 'GROQ_API_KEY' not found in Streamlit Cloud Secrets.")
+    st.error("⚠️ Developer Setup Required: Please add 'GROQ_API_KEY' to Streamlit Secrets.")
     st.stop()
 
 # --- 3. WEB SEARCH ENGINE ---
 def get_web_context(query):
-    """Fetches real-time info from the web to answer the question."""
+    """Albert's web search engine to get real-time facts."""
     try:
         with DDGS() as ddgs:
-            # We fetch the top 3 results for accuracy
             results = [r['body'] for r in ddgs.text(query, max_results=3)]
             return "\n".join(results)
     except Exception:
         return "Search currently unavailable. Responding with internal knowledge."
 
-# --- 4. UI & CHAT LOGIC ---
-st.title("🌐 Universal AI Agent")
-st.caption("Blazing Fast Cloud AI • Real-time Web Search • Mobile Ready")
+# --- 4. ALBERT CHAT INTERFACE ---
+st.title("🤖 I am Albert")
+st.caption("Professional AI Assistant • Live Web Search • Powered by Groq")
 
-# Initialize Session State for Chat History
+# Initialize Chat History
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display previous messages
+# Display Chat History
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# User Input Handler
-if prompt := st.chat_input("Ask me anything..."):
+# User Input
+if prompt := st.chat_input("How can I help you today?"):
     # Add user message to history
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Generate AI Response
+    # Generate Albert's Response
     with st.chat_message("assistant"):
-        # Step A: Perform Web Search
-        with st.status("🔍 Searching the web for the latest info...", expanded=False):
+        # Real-time Web Search
+        with st.status("🔍 Albert is searching the web...", expanded=False):
             context = get_web_context(prompt)
-            st.write("Synthesizing answer...")
+            st.write("Processing information...")
 
-        # Step B: Create "Super Prompt" for Llama 3
-        # This tells the AI to use the web data we just found
-        system_instructions = f"Using this web data: {context}\n\nAnswer the user query: {prompt}"
+        # System Prompt for Albert
+        system_instructions = (
+            f"You are Albert, a professional and helpful AI assistant. "
+            f"Use the following web data to provide an accurate answer: {context}\n\n"
+            f"User Question: {prompt}"
+        )
         
         response_placeholder = st.empty()
         full_response = ""
         
-        # Step C: Stream Response from Groq Cloud
+        # Stream the response for a professional feel
         try:
             stream = client.chat.completions.create(
-                model="llama-3.3-70b-versatile", # The professional high-speed model
+                model="llama-3.3-70b-versatile",
                 messages=[{"role": "user", "content": system_instructions}],
                 stream=True,
             )
@@ -89,7 +90,7 @@ if prompt := st.chat_input("Ask me anything..."):
             
             response_placeholder.markdown(full_response)
         except Exception as e:
-            st.error(f"Groq Error: {str(e)}")
+            st.error(f"Albert encountered an error: {str(e)}")
 
-    # Save the full response to history
+    # Save to history
     st.session_state.messages.append({"role": "assistant", "content": full_response})
